@@ -177,13 +177,13 @@ The BIP340 signature scheme is public-unembeddable if SHA256 is preimage resista
 \end{theorem}
 
 
-\begin{lemma}[Injectivity of $X$]
+\begin{lemma}[Injectivity of $A$]
 \label{lem:Xinjective}
 Let $A$ be single-pass: on input $\mu$ it deterministically outputs
 $(x,k) = (X(\mu),K(\mu))$. As per the security game, we posit the existence of an $f$ such that
 $f(P,R,s)=\mu$ for all $\mu$ in a domain $\mathcal{D}$ of superlogarithmic size,
 where $P=xG$, $R=kG$, and $s=k+ex$ with $e=H(P, R, m_0)$.
-If such an $f$ exists, i.e. the game PubUnEmbeddable can be won with non-negligible probability, then $X$ must be injective on $\mathcal{D}$.
+If such an $f$ exists, i.e. the game PubUnEmbeddable can be won with non-negligible probability, then $A$ must be injective on $\mathcal{D}$.
 \end{lemma}
 
 (Note: we do not bother to mention discrete log hardness in $\G$ here; if discrete log is not hard, then Theorem~\ref{thm:pubunembedthm} is vacuous: every signature would leak the secret witness, meaning the property public-unembeddable can never be achieved).
@@ -223,8 +223,8 @@ which recovers $x$ (and then $k=g(x)$) from the single transcript.
 \end{theorem}
 
 \begin{proof}
-By Lemma~\ref{lem:Xinjective}, $X$ is injective on $\mathcal{D}$,
-so $X$ has a well-defined inverse on its image $\mathcal{X}=X(\mathcal{D})$.
+By Lemma~\ref{lem:Xinjective}, $A$ is injective on $\mathcal{D}$,
+so either $X$ or $K$ (reminder, we define $A(\mu) = (X(\mu), K(\mu))$) has a well-defined inverse on its image $\mathcal{X}=X(\mathcal{D})$ or equivalently $\mathcal{K}$. We assume the former; the other is a trivial reworking.
 Define $g(x):=K(X^{-1}(x))$. Then for each $\mu$, $A$ outputs $(x,g(x))$.
 The transcript satisfies $s=g(x)+ex$.
 Suppose two distinct $x_1\neq x_2$ collide under $h_e$, i.e.
