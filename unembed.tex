@@ -212,12 +212,11 @@ Then there exists a public function $g$ such that $k=g(x)$ on the set of outputs
 For any transcript $(P,R,s)$ with $P=xG$, $R=g(x)G$, and $s=g(x)+ex\bmod n$,
 where $e=H(P\|R\|m_0)$, define
 \[
-h_e(x) := g(x) + e x \pmod n.
+h(x) := g(x) + e x \pmod n.
 \]
-For all but a negligible fraction of $e$, the map $h_e$ is injective on
-the image of $X$. Hence there exists a public extractor
+The map $h$ is injective on the image of $X$. Hence there exists a public extractor
 \[
-\mathrm{Ext}(P,R,s) = h_e^{-1}(s),
+\mathrm{Ext}(P,R,s) = h^{-1}(s),
 \]
 which recovers $x$ (and then $k=g(x)$) from the single transcript.
 \end{theorem}
@@ -226,19 +225,14 @@ which recovers $x$ (and then $k=g(x)$) from the single transcript.
 By Lemma~\ref{lem:Xinjective}, $A$ is injective on $\mathcal{D}$,
 so either $X$ or $K$ (reminder, we define $A(\mu) = (X(\mu), K(\mu))$) has a well-defined inverse on its image $\mathcal{X}=X(\mathcal{D})$ or equivalently $\mathcal{K}$. We assume the former; the other is a trivial reworking.
 Define $g(x):=K(X^{-1}(x))$. Then for each $\mu$, $A$ outputs $(x,g(x))$.
-The transcript satisfies $s=g(x)+ex$.
-Suppose two distinct $x_1\neq x_2$ collide under $h_e$, i.e.
-$g(x_1)+e x_1 = g(x_2)+e x_2 \pmod n$.
-Then
-\[
-e = (g(x_1)-g(x_2))(x_2-x_1)^{-1}\pmod n,
-\]
-The probability that the hash function $H$ output $e$
-hits such a bad value is negligible assuming the property of preimage resistance (otherwise an adversary might be able to find an $e$ satisfying the above for a specific $x_1, x_2$ pair). Therefore, with overwhelming probability, $h_e$ is injective on $\mathcal{X}$, so $x=h_e^{-1}(s)$ is uniquely determined.
+The transcript satisfies $s=g(x)+ex$; we call $s = h(x)$.
+Suppose two distinct $x_1\neq x_2$ collide under $h$, i.e.
+$g(x_1)+e_1 x_1 = g(x_2)+e_2 x_2 \pmod n$.
+The probability that the hash function $H$, assuming it has the expected preimage resistance property, has outputs $e_1, e_2$ that satisfy this is negligible: since $e_1, e_2$ are unpredictably random outputs of $x_1, x_2$, this means that $g(x_1), g(x_2)$ are already fixed before the values $e_1, e_2$ are known. Therefore, with overwhelming probability, $h$ is injective on $\mathcal{X}$, so $x=h^{-1}(s)$ is uniquely determined.
 \end{proof}
 
-(Actually, strict injectivity of $h_e$ is not required. It suffices that, for each $(e,s)$, the set
-$\{\,x \in \mathcal{X} : h_e(x) = s\,\}$ is of size poly in $\lambda$ and can thus be efficiently enumerated. In that case, the correct value of $x$ is the unique element of this set satisfying $P = xG$, so extraction remains possible even if $h_e$ is many-to-one not one-to-one. However the stricter statement seems to work fine, here.)
+(Actually, strict injectivity of $h$ is not required. It suffices that, for each $(e,s)$, the set
+$\{\,x \in \mathcal{X} : h_e(x) = s\,\}$ is of size poly in $\lambda$ and can thus be efficiently enumerated. In that case, the correct value of $x$ is the unique element of this set satisfying $P = xG$, so extraction remains possible even if $h$ is many-to-one not one-to-one. However the stricter statement seems to be correct here.)
 
 \vskip 0.2in
 
@@ -252,7 +246,7 @@ In fact, much of modern cryptography only exists because of this distinction!
 
 But here we are working inside the game PubUnEmbeddable, where
 the adversary's chosen $f$ is assumed to run in polynomial time.
-If such an $f$ exists, then the relation $s = g(x)+ex$ implies that its inverse (what we call $h$, which returns $x$ from $s$), must be efficiently computable.
+If such an $f$ exists, then the relation $s = g(x)+ex$ implies that its inverse (what we call $h^{-1}$, which returns $x$ from $s$), must be efficiently computable.
 
 \vskip 0.2in
 
