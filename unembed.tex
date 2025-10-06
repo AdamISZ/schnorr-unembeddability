@@ -228,11 +228,11 @@ Define $g(x):=K(X^{-1}(x))$. Then for each $\mu$, $A$ outputs $(x,g(x))$.
 The transcript satisfies $s=g(x)+ex$; we call $s = h(x)$.
 Suppose two distinct $x_1\neq x_2$ collide under $h$, i.e.
 $g(x_1)+e_1 x_1 = g(x_2)+e_2 x_2 \pmod n$.
-The probability that the hash function $H$, assuming it has the expected preimage resistance property, has outputs $e_1, e_2$ that satisfy this is negligible: since $e_1, e_2$ are unpredictably random outputs of $x_1, x_2$, this means that $g(x_1), g(x_2)$ are already fixed before the values $e_1, e_2$ are known. Therefore, with overwhelming probability, $h$ is injective on $\mathcal{X}$, so $x=h^{-1}(s)$ is uniquely determined.
+The probability that the hash function $H$, assuming it has the expected preimage resistance property, has outputs $e_1, e_2$ that satisfy this is negligible: since $e_1, e_2$ are unpredictably random outputs of $x_1, x_2$, this means that $g(x_1), g(x_2)$ are already fixed before the values $e_1, e_2$ are known. Therefore, with overwhelming probability, $h$ is effectively injective on $\mathcal{X}$, so $x=h^{-1}(s)$ is uniquely determined, computationally.
 \end{proof}
 
-(Actually, strict injectivity of $h$ is not required. It suffices that, for each $(e,s)$, the set
-$\{\,x \in \mathcal{X} : h_e(x) = s\,\}$ is of size poly in $\lambda$ and can thus be efficiently enumerated. In that case, the correct value of $x$ is the unique element of this set satisfying $P = xG$, so extraction remains possible even if $h$ is many-to-one not one-to-one. However the stricter statement seems to be correct here.)
+(Strict injectivity of $h$ is not required. It suffices that, for each $(e,s)$, the set
+$\{\,x \in \mathcal{X} : h_e(x) = s\,\}$ is of size poly in $\lambda$ and can thus be efficiently enumerated. In that case, the correct value of $x$ is the unique element of this set satisfying $P = xG$, so extraction remains possible even if $h$ is many-to-one not one-to-one.)
 
 \vskip 0.2in
 
@@ -244,9 +244,10 @@ possess a set-theoretic inverse $h^{-1}$, but there is no guarantee that
 this inverse can be evaluated in polynomial time.
 In fact, much of modern cryptography only exists because of this distinction!
 
+\vskip 0.1in
+
 But here we are working inside the game PubUnEmbeddable, where
-the adversary's chosen $f$ is assumed to run in polynomial time.
-If such an $f$ exists, then the relation $s = g(x)+ex$ implies that its inverse (what we call $h^{-1}$, which returns $x$ from $s$), must be efficiently computable.
+the adversary's chosen $f$ is assumed to run in polynomial time. The adversary calculates $s=h(x)$ given uncontrollable (since one-shot) random values $P, R$ as the output of $f^{-1}_{P, R}(\mu) =h(x(\mu))$ and so if such an $f$ exists, then the relation $s = g(x)+ex$ implies that its inverse must be efficiently computable.
 
 \vskip 0.2in
 
