@@ -176,7 +176,7 @@ Commentary:
 The game PubUnEmbeddable can be won by choosing $k = g(x)$ to be any function of $x$ such that $g(x) + ex$ is invertible. Here are some motivating examples:
 
 \begin{itemize}
-\item The trivial case: let $X(\mu) = \mu$ and $K(\mu) = \mu$. This is the simplest possible way to encode $\mu$ via the secret key material. This $X$ is the identity function, and is clearly invertible. We get the function $g(x) = x$ for $k$, also the identity function, and $s = k + ex$ = $g(x) + ex$ = $(1+e)x$, which makes our $h_e(x)$ function trivially invertible: $x = \frac{s}{1 + H(P, R, '')}$.
+\item The trivial case: let $A(\mu) = (K(\mu), X(\mu))$. Let $X(\mu) = \mu$ and $K(\mu) = \mu$. This is the simplest possible way to encode $\mu$ via the secret key material. This $X$ is the identity function, and is clearly invertible. We get the function $g(x) = x$ for $k$, also the identity function, and $s = k + ex$ = $g(x) + ex$ = $(1+e)x$, which makes our $h_e(x)$ function trivially invertible: $x = \frac{s}{1 + H(P, R, '')}$.
 \item The general affine case: If $g(x)=\alpha x+\beta$ with public $\alpha,\beta\in\mathbb{Z}_n$, then
 \[
 s \equiv (\alpha+e)x + \beta \pmod n.
@@ -197,8 +197,23 @@ The above examples illustrate that \textbf{if} the nonce $k$ is a function of $x
 
 \begin{theorem}
 \label{thm:pubunembedthm}
-The BIP340 signature scheme is public-unembeddable if SHA256 is preimage resistant.
+The BIP340 signature scheme is public-unembeddable in the ROM for SHA256.
 \end{theorem}
+
+\begin{lemma}[$k$ and $x$ are functionally related]
+\label{lem:kxrelated}
+If the adversary wins the game PubUnEmbeddable with non-negligible probability, then $k = g(x)$ is a function of $x$.
+\end{lemma}
+
+\begin{proof}
+Without explicitly referring to the forking lemma (and thus avoiding quantitative analysis), we can see that if we wrap the challenger and fork it at the calls to $e = H(P, R, '')$, then rewind and replay any successful attempt to win the game, we get:
+
+\[f(P, R, s_1) = f(P, R, s_2) = \mu \]
+where
+\[s_1 = k + e_1 x, \quad s_2 = k + e_2 x \]
+
+Thus if $k + e_1 x = k + e_2 x$, with $e_1, e_2$ chosen unpredictably at random by the oracle (and not limited to twice, of course), it follows that $k$ must be a function of $x$ (note that it would be equivalent to define $x$ as a function of $k$ \footnote{This comment applies specifically to Schnorr, since the alternate forms $s = k + ex$ and $s = ek + x$ are functionally identical, differing only by a multiple, assuming that the inverse of $H$ has the same properties as $H$ itself. The comment does \emph{not} apply to all signature schemes, and specifically does not apply to ECDSA.}).
+\end{proof}
 
 \iffalse
 \begin{lemma}[Composite invertibility]
@@ -221,6 +236,7 @@ Thus \( h \) is invertible, and its inverse is given by \( h^{-1} = g \circ f^{-
 A quick aside: we define \textbf{countably injective}, and will use this term, as the idea that a function can be reversed to find multiple possible solutions, but countably many (and computationally feasible to count). This definition is not standard but is important in practice. A simple example is that a general quadratic function $f$ has an ``inverse'' that outputs in general two possible values, not one. This is distinct from a line like $3x+y$ which has infinite pairs $x, y$ solving any specific output value.
 \end{definition}
 
+\iffalse
 \begin{lemma}[Injectivity of $A$]
 \label{lem:Xinjective}
 Let $A$ be single-pass: on input $\mu$ it deterministically outputs
@@ -247,16 +263,18 @@ the assumption that $f$ correctly recovers every $\mu\in\mathcal D$ (which is th
 Therefore the function $A$ used by a winning adversary must be injective.
 \end{proof}
 
-(Note that this argument is not dependent on Schnorr's algebraic structure $k + ex$ (whereas Theorem~\ref{thm:extraction} below definitely \emph{does} depend on that structure!), but only on the deterministic nature of the ``public transcript'' $P, R, s$; it is defined deterministically by the secret witness $(k, x)$. Note also that the argument being ``first-pass-only'' is a way to model the idea that we cannot grind some bytes into the data by trial and error; if we allow this, then data can always be embedded, but since the work is exponential we feel at liberty to ignore this.)
+(Note that the argument being ``first-pass-only'' is a way to model the idea that we cannot grind some bytes into the data by trial and error; if we allow this, then data can always be embedded, but since the work is exponential we feel at liberty to ignore this.)
+
+\fi
 
 \begin{theorem}[Ability to win the game PubUnEmbeddable $\Rightarrow$ Extraction]
 \label{thm:extraction}
-Let the setting be as in Lemma~\ref{lem:Xinjective}.
+We assume Lemma~\ref{lem:kxrelated}.
 Then there exists a public function $g$ such that $k=g(x)$ on the set of outputs of $A$ ($(k, x)$).
 For any transcript $(P,R,s)$ with $P=xG$, $R=g(x)G$, and $s=g(x)+ex\bmod n$,
 where $e=H(P\|R\|m_0)$, write
 \[
-s = h(x) := g(x) + e x \pmod n.
+s = h(x) := g(x) + e x
 \]
 Then $h^{-1}$ is derivable from $f$ except with negligible probability, and
 \[
@@ -266,12 +284,9 @@ f = X^{-1} \circ h^{-1}
 \end{theorem}
 
 \begin{proof}
-By Lemma~\ref{lem:Xinjective}, $A$ is injective on $\mathcal{D}$,
-so either $X$ or $K$ (reminder, we define $A(\mu) = (X(\mu), K(\mu))$) has a well-defined inverse on its image $\mathcal{X}=X(\mathcal{D})$ or equivalently $\mathcal{K}$. We assume the former; the other is a trivial reworking.
-Define $g(x):=K(X^{-1}(x))$. Then for each $\mu$, $A$ outputs $(x,g(x))$.
 The transcript satisfies $s=g(x)+ex$; we call $s = h(x)$.
 
-$h$ is countably injective on the domain $Z_p$: suppose it were not; then, we have $g(x_1) + e_1x_1 = g(x_2) + e_2 x_2$, with $e-$values unpredictable outputs of the hash. \textbf{Assuming preimage resistance} of the chosen cryptographic hash function $H$ for $H(xG, kG, '')=e$, then we claim that $h$ is effectively countably-injective, though note that this does not yet imply computability of $h^{-1}$ on the codomain of $h$.
+$h$ is countably injective on the domain $Z_p$: suppose it were not; then, we have $g(x_1) + e_1x_1 = g(x_2) + e_2 x_2$, with $e-$values unpredictable outputs of the hash. \textbf{Assuming preimage resistance} (or, using the ROM) of the chosen cryptographic hash function $H$ for $H(xG, kG, '')=e$, then we claim that $h$ is effectively countably-injective, though note that this does not yet imply computability of $h^{-1}$ on the codomain of $h$.
 
 \vskip 0.1in
 
@@ -292,9 +307,9 @@ Theorem~\ref{thm:extraction} is thus proved assuming the preimage resistance of 
 
 
 
-\subsection{Why this analysis does not apply directly to ECDSA}
+\section{Why this analysis does not apply to ECDSA}
 
-In the case of ECDSA, there is no intrinsic binding to the public key in the hash step. This means one can ``back-solve'' for the private key after having already passed the message through the hash function. This breaks the public-unembeddability property, a claim we expand on, but don't fully prove, in the remainder:
+In the case of ECDSA, there is no intrinsic binding to the public key in the hash step. This means one can ``back-solve'' for the private key after having already passed the message through the hash function. This breaks the public-unembeddability property, as is proven in outline in the remainder:
 
 \vskip 0.2in
 
@@ -305,10 +320,10 @@ Concretely, this corresponds to the reality that it is actually quite trivial in
 Discursively: we consider again the idea of inverting functions. Let's start with Schnorr. Suppose your goal was to extract a secret key $x$ from a given signature $s$; we have a function $f_k(x) = k + ex$ to go $x \rightarrow s$. If we want to go the other way, i.e. to invert the function, we have $x = \frac{s - k}{e}$. But because $e$ depends on $x$ you have a circular reference and cannot construct that function in reality if the hash function in $e$ behaves cryptographically. While if you tried to apply this logic to ECDSA, it fails, because as already noted, the formula for the private key is: $d = \frac{(sk - H(m))}{R_x}$, which does not have any such circular dependency; note that there is an ``implicit hash'' of the nonce in $R_x$, but there is no such hash of the signing key.
 
 \vskip 0.2in
-If we try to apply the same formal model of a game PubUnEmbeddable2 (where the 2 refers to the ECDSA, instead of Schnorr, calculation performed by the challenger in the verification step), we find that the first step, that of Lemma~\ref{lem:Xinjective} already fails. And the reason for this is easy to see: remembering that $A$ consists of 2 mappings $X(\mu), K(\mu)$ we see that here, it is already sufficient to draw the output of $K$ completely at random, and still extract a constant output $\mu$. The way to do that was explained in the previous paragraph. If we adopt this strategy (no doubt there are others), we can write $X(\mu) = \frac{\mu k - e}{r_{x}}$ with $e=H(m)$ and $r_x$ the x-coord of $kG$. If we then want to collide on $X(\mu_1) = X(\mu_2)$, it is easy to arrange: just choose:
+If we try to apply the same formal model of a game PubUnEmbeddable2 (where the 2 refers to the ECDSA, instead of Schnorr, calculation performed by the challenger in the verification step), we find that the first step, that of Lemma~\ref{lem:kxrelated} already fails. There is nowhere to fork; our hash function is now only taking constant input ''. More specifically, we cannot fork on the choice of $x$ by the adversary, at all. For this reason we cannot force the adversary to make $k$ dependent on or related to $x$, and indeed, we have just seen that we can choose $k$ entirely at random and thus hide the secret material. Casting things into the formal language, we can write $X(\mu) = \frac{\mu k - e}{r}$ with $e=H(m)$ and $r$ the x-coord of $kG$. If we then want to collide on $X(\mu_1) = X(\mu_2)$, it is easy to arrange: just choose:
 \[ \mu_1 = \frac{e + \frac{r_1}{r_2}\left(\mu_2 k_2 -e\right)}{k_1}
 \]
-This ability to arbitrarily collide without needing a violation of preimage resistance, tells us that we cannot extract $x$ from $\mu$ via a function inversion, and indeed that is what is seen in the previous half-a-puzzle example: the data is embedded without leaking the secret key.
+This ability to arbitrarily collide without needing a violation of preimage resistance is just another way to illustrate that we cannot extract $x$ from $\mu$ via a function inversion, and indeed that is what is seen in the previous half-a-puzzle example: the data is embedded without leaking the secret key.
  
 \vskip 0.2in
 
