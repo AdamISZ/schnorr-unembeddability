@@ -171,11 +171,55 @@ Commentary:
 \item We require $|\mathcal{D}|$ to have superlogarithmic entropy in the security parameter $\lambda$. For smaller domains (e.g. polynomial in $\lambda$), an adversary can exhaustively search all possible $\mu$.
 \end{itemize}
 
+\subsubsection*{Examples}
+
+The game PubUnEmbeddable can be won by choosing $k = g(x)$ to be any function of $x$ such that $g(x) + ex$ is invertible. Here are some motivating examples:
+
+\begin{itemize}
+\item The trivial case: let $X(\mu) = \mu$ and $K(\mu) = \mu$. This is the simplest possible way to encode $\mu$ via the secret key material. This $X$ is the identity function, and is clearly invertible. We get the function $g(x) = x$ for $k$, also the identity function, and $s = k + ex$ = $g(x) + ex$ = $(1+e)x$, which makes our $h_e(x)$ function trivially invertible: $x = \frac{s}{1 + H(P, R, '')}$.
+\item The general affine case: If $g(x)=\alpha x+\beta$ with public $\alpha,\beta\in\mathbb{Z}_n$, then
+\[
+s \equiv (\alpha+e)x + \beta \pmod n.
+\]
+For all $e\not\equiv -\alpha \pmod n$,
+\[
+x = (s-\beta)(\alpha+e)^{-1}\pmod n,\qquad k=g(x).
+\]
+Thus both $x$ and $k$ are publicly extractable from one transcript. We note that due to the dependence of one variable on the other, this only represents the embedding of 256 bits of data, not 512.
+\item A quadratic function. Let $X(\mu) = \mu$ and $K(\mu) = a\mu^2 + b\mu + c$, that is, $g(x) = ax^2 + bx+ c$. Then the function $f$ will be:
+\[
+f(P, R, s) = \left(-(b+e) \pm \sqrt{(b+e)^2 - 4a(c-s)}\right)/2a
+\]
+\ldots where $e = H(P, R, '')$. In this last case, notice that there are in general two solutions to the given quadratic, which cannot be fully controlled in advance since $e$ is unavoidably random; however, it has been constructed so that $x=\mu$ is always \emph{one} solution. Note also that is trivial to check if a candidate solution actually fits the signature; simply compare $xG$ with $P$.
+\end{itemize}
+
+The above examples illustrate that \textbf{if} the nonce $k$ is a function of $x$, $g(x)$, such that $g(x) + ex$ is invertible, \textbf{then} the game PubUnEmbeddable can be won. In the remainder we argue that there is no \textbf{other} way to win the game.
+
 \begin{theorem}
 \label{thm:pubunembedthm}
 The BIP340 signature scheme is public-unembeddable if SHA256 is preimage resistant.
 \end{theorem}
 
+\iffalse
+\begin{lemma}[Composite invertibility]
+\label{lem:compinver}
+Let \( g : A \to B \) and \( h : B \to C \) be functions, and define \( f = h \circ g : A \to C \).
+If \( f \) and \( g \) are invertible, then \( h \) is also invertible, with
+\[
+    h^{-1} = g \circ f^{-1}.
+\]
+\end{lemma}
+
+\begin{proof}
+Since \( f = h \circ g \), we have \( h = f \circ g^{-1} \).
+Because both \( f \) and \( g^{-1} \) are bijective, their composition \( h \) is bijective as well.
+Thus \( h \) is invertible, and its inverse is given by \( h^{-1} = g \circ f^{-1} \).
+\end{proof}
+\fi
+
+\begin{definition}
+A quick aside: we define \textbf{countably injective}, and will use this term, as the idea that a function can be reversed to find multiple possible solutions, but countably many (and computationally feasible to count). This definition is not standard but is important in practice. A simple example is that a general quadratic function $f$ has an ``inverse'' that outputs in general two possible values, not one. This is distinct from a line like $3x+y$ which has infinite pairs $x, y$ solving any specific output value.
+\end{definition}
 
 \begin{lemma}[Injectivity of $A$]
 \label{lem:Xinjective}
@@ -210,15 +254,15 @@ Therefore the function $A$ used by a winning adversary must be injective.
 Let the setting be as in Lemma~\ref{lem:Xinjective}.
 Then there exists a public function $g$ such that $k=g(x)$ on the set of outputs of $A$ ($(k, x)$).
 For any transcript $(P,R,s)$ with $P=xG$, $R=g(x)G$, and $s=g(x)+ex\bmod n$,
-where $e=H(P\|R\|m_0)$, define
+where $e=H(P\|R\|m_0)$, write
 \[
-h(x) := g(x) + e x \pmod n.
+s = h(x) := g(x) + e x \pmod n.
 \]
-The map $h$ is injective on the image of $X$. Hence there exists a public extractor
+Then $h^{-1}$ is derivable from $f$ except with negligible probability, and
 \[
-\mathrm{Ext}(P,R,s) = h^{-1}(s),
+f = X^{-1} \circ h^{-1}
 \]
-which recovers $x$ (and then $k=g(x)$) from the single transcript.
+, and the secret key can be extracted as $h^{-1}(s)$.
 \end{theorem}
 
 \begin{proof}
@@ -226,48 +270,27 @@ By Lemma~\ref{lem:Xinjective}, $A$ is injective on $\mathcal{D}$,
 so either $X$ or $K$ (reminder, we define $A(\mu) = (X(\mu), K(\mu))$) has a well-defined inverse on its image $\mathcal{X}=X(\mathcal{D})$ or equivalently $\mathcal{K}$. We assume the former; the other is a trivial reworking.
 Define $g(x):=K(X^{-1}(x))$. Then for each $\mu$, $A$ outputs $(x,g(x))$.
 The transcript satisfies $s=g(x)+ex$; we call $s = h(x)$.
-Suppose two distinct $x_1\neq x_2$ collide under $h$, i.e.
-$g(x_1)+e_1 x_1 = g(x_2)+e_2 x_2 \pmod n$.
-The probability that the hash function $H$, assuming it has the expected preimage resistance property, has outputs $e_1, e_2$ that satisfy this is negligible: since $e_1, e_2$ are unpredictably random outputs of $x_1, x_2$, this means that $g(x_1), g(x_2)$ are already fixed before the values $e_1, e_2$ are known. Therefore, with overwhelming probability, $h$ is effectively injective on $\mathcal{X}$, so $x=h^{-1}(s)$ is uniquely determined, computationally.
-\end{proof}
 
-(Strict injectivity of $h$ is not required. It suffices that, for each $(e,s)$, the set
-$\{\,x \in \mathcal{X} : h_e(x) = s\,\}$ is of size poly in $\lambda$ and can thus be efficiently enumerated. In that case, the correct value of $x$ is the unique element of this set satisfying $P = xG$, so extraction remains possible even if $h$ is many-to-one not one-to-one.)
-
-\vskip 0.2in
-
-\paragraph{Remark.}
-It is important to distinguish between \emph{existence} of an inverse
-function and its \emph{efficient computability}.
-In general, many injective functions $h:\mathcal X \to \mathbb{Z}_n$
-possess a set-theoretic inverse $h^{-1}$, but there is no guarantee that
-this inverse can be evaluated in polynomial time.
-In fact, much of modern cryptography only exists because of this distinction!
+$h$ is countably injective on the domain $Z_p$: suppose it were not; then, we have $g(x_1) + e_1x_1 = g(x_2) + e_2 x_2$, with $e-$values unpredictable outputs of the hash. \textbf{Assuming preimage resistance} of the chosen cryptographic hash function $H$ for $H(xG, kG, '')=e$, then we claim that $h$ is effectively countably-injective, though note that this does not yet imply computability of $h^{-1}$ on the codomain of $h$.
 
 \vskip 0.1in
 
-But here we are working inside the game PubUnEmbeddable, where
-the adversary's chosen $f$ is assumed to run in polynomial time. The adversary calculates $s=h(x)$ given uncontrollable (since one-shot) random values $P, R$ as the output of $f^{-1}_{P, R}(\mu) =h(x(\mu))$ and so if such an $f$ exists, then the relation $s = g(x)+ex$ implies that its inverse must be efficiently computable.
+Since the adversary was required to produce $f(P, R, s) =  \mu$, we can write $f(P, R, h(x)) = \mu$ and $f(P, R, h(X(\mu))) = \mu$ and so $f$ is a left-inverse of the composite function $h \circ X$. Thus:
 
+\[ f \circ h \circ X = \textrm{id}
+\]
+\[ f \circ \left(h \circ X\right) \circ \left(h \circ X\right)^{-1} =  \left(h \circ X \right)^{-1}
+\]
+\[ f = X^{-1} \circ h^{-1}
+\]
+
+Thus we can find $h^{-1}$ as $X \circ f$ and this must be computable if $f$ is computable (we generally assume the trivial $X(\mu) = \mu$; other more complex relations could be folded into $f$, after all).
+\end{proof}
 \vskip 0.2in
-
 Theorem~\ref{thm:extraction} is thus proved assuming the preimage resistance of $H$, which directly implies Theorem~\ref{thm:pubunembedthm} as the specific case of $\G =$ the group secp256k1 and $H =$ SHA256.
 
 
-\subsubsection*{Examples}
 
-\begin{itemize}
-\item The trivial case: let $X(\mu) = \mu$ and $K(\mu) = \mu$. This is the simplest possible way to encode $\mu$ via the secret key material. This $X$ is the identity function, and is clearly invertible. We get the function $g(x) = x$ for $k$, also the identity function, and $s = k + ex$ = $g(x) + ex$ = $(1+e)x$, which makes our $h_e(x)$ function trivially invertible: $x = \frac{s}{1 + H(P, R, '')}$.
-\item The general affine case: If $g(x)=\alpha x+\beta$ with public $\alpha,\beta\in\mathbb{Z}_n$, then
-\[
-s \equiv (\alpha+e)x + \beta \pmod n.
-\]
-For all $e\not\equiv -\alpha \pmod n$,
-\[
-x = (s-\beta)(\alpha+e)^{-1}\pmod n,\qquad k=g(x).
-\]
-Thus both $x$ and $k$ are publicly extractable from one transcript. We note that due to the dependence of one variable on the other, this only represents the embedding of 256 bits of data, not 512.
-\end{itemize}
 
 \subsection{Why this analysis does not apply directly to ECDSA}
 
