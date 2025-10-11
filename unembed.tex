@@ -212,7 +212,9 @@ Without explicitly referring to the forking lemma (and thus avoiding quantitativ
 where
 \[s_1 = k + e_1 x, \quad s_2 = k + e_2 x \]
 
-Thus if $k + e_1 x = k + e_2 x$, with $e_1, e_2$ chosen unpredictably at random by the oracle (and not limited to twice, of course), it follows that $k$ must be a function of $x$ (note that it would be equivalent to define $x$ as a function of $k$ \footnote{This comment applies specifically to Schnorr, since the alternate forms $s = k + ex$ and $s = ek + x$ are functionally identical, differing only by a multiple, assuming that the inverse of $H$ has the same properties as $H$ itself. The comment does \emph{not} apply to all signature schemes, and specifically does not apply to ECDSA.}).
+Thus we require $f(k + e_1 x) = f(k + e_2 x)$, with $e_1, e_2$ chosen unpredictably at random by the oracle (and not limited to twice, of course). Since $f$ has two degrees of freedom in its input and only 1 in its output, it follows that one of the inputs is a function of the other. Note that this deduction is \emph{not} valid in the absence of the uncontrollable and unpredictable multiplier $e$; if e.g. we had $f(k + 3x) = 10$ it would be easy to find an infinite set of tuples $(k, x)$ to satisfy this with any normal $f$, such as the identity function.
+
+And so we write that $k$ must be a function of $x$  (note that it would be equivalent to define $x$ as a function of $k$ \footnote{This comment applies specifically to Schnorr, since the alternate forms $s = k + ex$ and $s = ek + x$ are functionally identical, differing only by a multiple, assuming that the inverse of $H$ has the same properties as $H$ itself. The comment does \emph{not} apply to all signature schemes, and specifically does not apply to ECDSA.}).
 \end{proof}
 
 \iffalse
@@ -302,7 +304,7 @@ Since the adversary was required to produce $f(P, R, s) =  \mu$, we can write $f
 Thus we can find $h^{-1}$ as $X \circ f$ and this must be computable if $f$ is computable (we generally assume the trivial $X(\mu) = \mu$; other more complex relations could be folded into $f$, after all).
 \end{proof}
 \vskip 0.2in
-Theorem~\ref{thm:extraction} is thus proved assuming the preimage resistance of $H$, which directly implies Theorem~\ref{thm:pubunembedthm} as the specific case of $\G =$ the group secp256k1 and $H =$ SHA256.
+Theorem~\ref{thm:extraction} is thus proved assuming the preimage resistance of $H$, or using the ROM for $H$, which directly implies Theorem~\ref{thm:pubunembedthm} as the specific case of $\G =$ the group secp256k1 and $H =$ SHA256.
 
 
 
